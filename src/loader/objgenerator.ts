@@ -5,6 +5,7 @@ import {saveJSON} from "./jsonutils";
 import {reprojectPolygonFeature, shiftPolygonFeatureBackInMeters} from "./geoutils";
 import {createMtlObJContent, createObJContent, getVertices, Wall} from "./generatevertices";
 import {downloadEPSGToPrj} from "./ogcwktutils";
+import {splitSharpImage} from "./imageprocessing";
 
 const wallWidth = 0.5;
 const textureBaseName =  "texture";
@@ -124,13 +125,34 @@ export class ObjGenerator {
     }
 
     private async createAllTextures() {
-        const width = Math.ceil(this.metadata.width * this.options.scale);
+        const estimatedWidth = Math.ceil(this.metadata.width * this.options.scale);
         console.log("Generating textures:");
 
         if (this.walls.length===1) {
             const filename = `${this.options.output}/${this.walls[0].texture}`;
             console.log(` - Saving texture: ${filename}`);
-            await sharp(this.options.imagefile, {limitInputPixels}).resize({width: width}).toFile(filename);
+            await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth}).toFile(filename);
+        } else {
+            const pieces = this.walls.length;
+            const maxWidth = this.options.maxwidth;
+            const newSharpImage = await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth});
+            const metadata = newSharpImage.metadata();
+
+            for (let i=0; i<pieces; ++i) {
+                const width = metadata.width;
+                const wall = this.walls[i];
+                const filename = `${this.options.output}/${wall.texture}`;
+
+                const tileWidth = (i===pieces-1) ? width - i*maxWidth : maxWidth;
+                const values = {
+                    tile: i,
+                    left: i*maxWidth,
+                    top: 0,
+                    width: tileWidth,
+                    height: metadata.height
+                }
+                await splitSharpImage(newSharpImage, values, `${this.options.output}/${filename}`);
+            }
         }
         console.log("All textures completed");
     }
