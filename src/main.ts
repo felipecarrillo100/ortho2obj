@@ -20,7 +20,7 @@ program
 
 program.command('image-info')
     .description('Provides info about the image file')
-    .argument('<imagefile>', 'The orthophoto to be used as texture in tiff, png or jpeg format')
+    .argument('<imagefile>', 'The orthophoto to be used as texture, supported formats: tiff, png, jpeg')
     .action((imagefile, options) => {
         console.log("imagefile: ", imagefile)
         getMetadata(imagefile).then(metadata=> {
@@ -28,13 +28,13 @@ program.command('image-info')
         })
     });
 program.command('generate')
-    .description('Takes a csv file and a image and generates a Wavefront OBJ file with the image a texture on the main face of a cuboid')
+    .description('Takes a csv file and an image and generates a Wavefront OBJ file, the obj has a cuboid with the image used as texture on the main')
     .argument('<csvfile>', 'The CSV file containing the geographical coordinates of the orthophoto')
-    .argument('<imagefile>', 'The orthophoto to be used as texture in tiff, png or jpeg format')
+    .argument('<imagefile>', 'The orthophoto to be used as texture, supported formats: tiff, png, jpeg')
     .option('-o, --output <outputdir>', 'output directory', 'outputs')
     .option('-p, --projection [projection]', 'Target EPSG projection, default is: ', "EPSG:25832")
     .option('-f, --format [imageformat]', 'Image format for the output texture png, jpg: ', "jpg")
-    .option('-s, --scale <scale>', 'scale', '1')
+    .option('-s, --scale <scale>', 'Scale the texture reduce size, use 0 < texture <= 1', '1')
     .option('-m, --maxwidth <maxwidth>', 'maxwidth in pixels', '1000000')
     .option('-e, --export [feturecollection]', 'Export vertices to a FeatureCollection file, default name: FeatureCollection.geojson', null)
     .action((csvfile, imagefile, options) => {
@@ -49,7 +49,8 @@ program.command('generate')
                 projection: options.projection,
                 format: options.format
             }
-            const objGenerator = new ObjGenerator(fullOptions, metadata)
+            const objGenerator = new ObjGenerator(fullOptions, metadata);
+            if (!objGenerator.validOptions()) return;
             objGenerator.generateObj();
         })
     });

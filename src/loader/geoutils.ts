@@ -3,10 +3,10 @@ import turf from "turf";
 import transformTranslate from "@turf/transform-translate";
 
 export function reprojectPolygonFeature(polygonFeature, targetEPSG) {
-    const transform = transformation('EPSG:4326', targetEPSG);
     const newFeature = JSON.parse(JSON.stringify(polygonFeature));
 
     if (targetEPSG==="EPSG:4326" || targetEPSG==="CRS:84") return newFeature;
+    const transform = transformation('EPSG:4326', targetEPSG);
 
     const coordinates = polygonFeature.geometry.coordinates[0];
 

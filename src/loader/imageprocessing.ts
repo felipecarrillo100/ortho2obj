@@ -22,7 +22,7 @@ async function splitImage(image:string, bounds:any, newImage: string) {
 }
 
 
-async function splitSharpImage(image:sharp, bounds:any, newImage: string) {
+async function splitSharpImage(image:sharp.Sharp, bounds:any, newImage: string) {
     const metadata = await image.extract(bounds).toFile(newImage);
     console.log(metadata);
 }

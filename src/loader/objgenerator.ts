@@ -76,7 +76,8 @@ export class ObjGenerator {
                     const coordinate = [Number(row.wgs84_lon), Number(row.wgs84_lat),Number(row.wgs84_elev)];
                     feature.geometry.coordinates[0].push(coordinate);
                 }
-                resolve(featureCollection);
+                const result = this.splitFeatureCollectionWhenNeeded(featureCollection)
+                resolve(result);
             }, ()=> {
                 reject();
             })
@@ -112,13 +113,18 @@ export class ObjGenerator {
 
     private async saveAllWalls() {
         const objFilename = `${this.name}.obj`;
-        const mltFilename = `${this.name}.mtl`;
+        const mtlFilename = `${this.name}.mtl`;
         const prjFilename = `${this.name}.prj`;
-        const content = createObJContent(this.walls, mltFilename);
-        saveTextFile(content, `${this.options.output}/${objFilename}`);
-        const mtlContent = createMtlObJContent(this.walls, mltFilename);
-        saveTextFile(mtlContent, `${this.options.output}/${mltFilename}`);
 
+        console.log(`Generating obj file: ${objFilename}`)
+        const content = createObJContent(this.walls, mtlFilename);
+        saveTextFile(content, `${this.options.output}/${objFilename}`);
+
+        console.log(`Generating mtl file: ${mtlFilename}`)
+        const mtlContent = createMtlObJContent(this.walls, mtlFilename);
+        saveTextFile(mtlContent, `${this.options.output}/${mtlFilename}`);
+
+        console.log(`Downloading projection ${this.options.projection} to: ${prjFilename}`)
         downloadEPSGToPrj(this.options.projection, `${this.options.output}/${prjFilename}`)
 
         this.createAllTextures();
@@ -136,7 +142,7 @@ export class ObjGenerator {
             const pieces = this.walls.length;
             const maxWidth = this.options.maxwidth;
             const newSharpImage = await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth});
-            const metadata = newSharpImage.metadata();
+            const metadata = await newSharpImage.metadata();
 
             for (let i=0; i<pieces; ++i) {
                 const width = metadata.width;
@@ -155,6 +161,23 @@ export class ObjGenerator {
             }
         }
         console.log("All textures completed");
+    }
+
+    private splitFeatureCollectionWhenNeeded(featureCollection: { features: any[]; type: string }) {
+        return featureCollection;
+    }
+
+    validOptions() {
+        const valid = true;
+        if (!(0<this.options.scale && this.options.scale<=1)) {
+            console.log("Option scale out of range, must be between 0 < scale <= 1, got: " + this.options.scale);
+            return false;
+        }
+        if (!(this.options.projection.toLowerCase().startsWith("epsg:") || this.options.projection.toLowerCase()==="crs:84")) {
+            console.log("Option projection must use EPSG:<code>, got: " + this.options.projection);
+            return false;
+        }
+        return valid;
     }
 }
 

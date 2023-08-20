@@ -12,12 +12,7 @@
 
 #data
 /inputs
-/outputs/*.geojson
-/outputs/*.obj
-/outputs/*.mtl
-/outputs/*.prj
-/outputs/*.png
-/outputs/*.jpg
+/outputs
 
 # misc
 .DS_Store
