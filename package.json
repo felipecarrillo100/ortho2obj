@@ -1,0 +1,33 @@
+{
+  "name": "ortho2obj",
+  "version": "1.0.0",
+  "description": "Project for PORT AI",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/main.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@turf/transform-translate": "^6.5.0",
+    "@types/transform-coordinates": "^1.0.0",
+    "axios": "^1.4.0",
+    "commander": "^11.0.0",
+    "csv-parse": "^5.4.0",
+    "exif-reader": "^1.0.3",
+    "express": "^4.18.1",
+    "express-http-proxy": "^1.6.3",
+    "sharp": "^0.30.7",
+    "sqlite3": "^5.1.2",
+    "transform-coordinates": "^1.0.0",
+    "turf": "^3.0.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.1",
+    "@types/sharp": "^0.32.0",
+    "@types/turf": "^3.5.32",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}

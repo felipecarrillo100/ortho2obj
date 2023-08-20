@@ -1,0 +1,35 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+#idea
+.idea
+
+# dependencies
+/node_modules
+
+# production
+/dist
+/lib
+
+#data
+/inputs
+/outputs/*.geojson
+/outputs/*.obj
+/outputs/*.mtl
+/outputs/*.prj
+/outputs/*.png
+/outputs/*.jpg
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+#databases
+*.db
+portai.db
