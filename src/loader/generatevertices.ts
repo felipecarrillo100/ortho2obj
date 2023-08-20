@@ -42,7 +42,7 @@ function getVTs() {
 function createVertices(walls: Wall[]) {
     let content = ""
     for (let i =0 ; i<walls.length; ++i) {
-        const wall = walls[0]
+        const wall = walls[i]
         if (i===0) {
             for (const vertice  of wall.frontVertices) {
                 const [x,y,z] = vertice;
@@ -55,7 +55,7 @@ function createVertices(walls: Wall[]) {
         } else {
             let j = 0
             for (const vertice  of wall.frontVertices) {
-                if (j===1 || j === 2) {
+                if (j===2 || j === 3) {
                     const [x,y,z] = vertice;
                     content += `v ${x} ${y} ${z} \n`
                 }
@@ -63,7 +63,7 @@ function createVertices(walls: Wall[]) {
             }
             j = 0
             for (const vertice  of [...wall.backVertices].reverse()) {
-                if (j===1 || j === 2) {
+                if (j===0 || j === 1) {
                     const [x,y,z] = vertice;
                     content += `v ${x} ${y} ${z} \n`
                 }
@@ -85,7 +85,13 @@ function createVts(walls: Wall[]) {
 }
 
 function getWallVertices(i: number) {
-    return [1,2,3,4,5,6,7,8];
+    if (i==0) return [1,2,3,4,5,6,7,8];
+    if (i==1) return [4,3,9,10,11,12,6,5];
+
+    //  [10, 9, 13, 14, 15, 16, 12, 11]
+    //  [14, 13, 17, 18, 19, 20, 16, 15]
+    const current = (i-2) * 4 + 8;
+    return [current+2, current+1, current+5, current+6, current+7, current+8, current+4, current+3];
 }
 
 function createTexturedFaces(walls: Wall[]) {

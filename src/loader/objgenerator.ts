@@ -157,15 +157,30 @@ export class ObjGenerator {
         if (this.walls.length===1) {
             const filename = `${this.options.output}/${this.walls[0].texture}`;
             console.log(` - Saving texture: ${filename}`);
-            await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth}).toFile(filename);
+            if (this.options.scale===1) {
+                await sharp(this.options.imagefile, {limitInputPixels}).toFile(filename);
+            } else {
+                await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth}).toFile(filename);
+            }
         } else {
             const pieces = this.walls.length;
             const maxWidth = this.options.maxwidth;
-            const newSharpImage = await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth});
-            const metadata = await newSharpImage.metadata();
+            const newSharpImage = this.options.scale === 1 ?
+                await sharp(this.options.imagefile, {limitInputPixels}) :
+                await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth});
+
+            const imageInfo = {
+                width: this.metadata.width,
+                height: this.metadata.height
+            }
+            if (this.options.scale!==1) {
+                const { info } = await newSharpImage.png().toBuffer({ resolveWithObject: true });
+                imageInfo.width = info.width;
+                imageInfo.height = info.height;
+            }
 
             for (let i=0; i<pieces; ++i) {
-                const width = metadata.width;
+                const width = imageInfo.width
                 const wall = this.walls[i];
                 const filename = `${this.options.output}/${wall.texture}`;
 
@@ -175,9 +190,10 @@ export class ObjGenerator {
                     left: i*maxWidth,
                     top: 0,
                     width: tileWidth,
-                    height: metadata.height
+                    height: imageInfo.height
                 }
-                await cropSharpImage(newSharpImage, values, `${this.options.output}/${filename}`);
+                console.log(" - " + filename);
+                await cropSharpImage(newSharpImage, values, filename);
             }
         }
         console.log("All textures completed");
@@ -192,7 +208,7 @@ export class ObjGenerator {
         }
 
         const pieces = Math.ceil(estimatedWidth / this.options.maxwidth);
-        const newFeatureCollection = splitFeatureCollectionInHorizontalPieces(featureCollection, pieces);
+        const newFeatureCollection = splitFeatureCollectionInHorizontalPieces(featureCollection, pieces, this.options.maxwidth/estimatedWidth);
         return newFeatureCollection;
     }
 

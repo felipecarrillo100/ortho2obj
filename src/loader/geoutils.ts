@@ -1,6 +1,7 @@
 import transformation from "transform-coordinates";
 import turf from "turf";
 import transformTranslate from "@turf/transform-translate";
+import {saveJSON} from "./jsonutils";
 
 export function reprojectPolygonFeature(polygonFeature, targetEPSG) {
     const newFeature = JSON.parse(JSON.stringify(polygonFeature));
@@ -46,9 +47,57 @@ export function shiftPolygonFeatureBackInMeters(feature: any, width: number) {
     }
 }
 
-export function splitFeatureCollectionInHorizontalPieces(featureCollection: any, pieces: number) {
+export function splitFeatureCollectionInHorizontalPieces(featureCollection: any, pieces: number, ratio: number) {
   const newFeatureCollection = JSON.parse(JSON.stringify(featureCollection));
   const features = newFeatureCollection.features;
+  newFeatureCollection.features = [];
+
   if (features.length !== 1 ) return null;
+
+  const feature =  features[0];
+  const coordinates = feature.geometry.coordinates;
+
+    const topLeft = coordinates[0][0];
+    const topRight = coordinates[0][3];
+
+    const bottomLeft = coordinates[0][1];
+    const bottomRight = coordinates[0][2];
+
+    const from = turf.point(bottomLeft);
+    const to = turf.point(bottomRight);
+
+    const distance = turf.distance(from, to, "meters");
+    const bearing = turf.bearing(from, to);
+
+    console.log(`distance ${distance}`);
+    console.log(`bearing ${bearing}`);
+
+    const pointTop = turf.point(topLeft);
+    const pointBottom = turf.point(bottomLeft);
+
+    const newTopRight = turf.destination(pointTop, distance*ratio, bearing, "meters");
+    const newBottomRight = turf.destination(pointBottom, distance*ratio, bearing, "meters");
+
+
+    console.log(`newTopRight ${JSON.stringify(newTopRight)}`);
+    console.log(`newBottomRight ${JSON.stringify(newBottomRight)}`);
+
+
+    feature.geometry.coordinates[0][3] = [...newTopRight.geometry.coordinates, topRight[2]];
+    feature.geometry.coordinates[0][2] = [...newBottomRight.geometry.coordinates, bottomRight[2]];
+
+
+    for (let i=0; i<pieces; ++i) {
+        const shiftedFeature = transformTranslate(feature, distance*ratio*i,bearing, {units: "meters"} );
+        newFeatureCollection.features.push(shiftedFeature);
+    }
+
+    const lastFeature = newFeatureCollection.features[newFeatureCollection.features.length-1];
+
+    lastFeature.geometry.coordinates[0][3] = topRight;
+    lastFeature.geometry.coordinates[0][2] = bottomRight
+
+    console.log("New Feature clipped: ", JSON.stringify(newFeatureCollection));
+
   return  newFeatureCollection;
 }
