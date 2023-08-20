@@ -16,20 +16,20 @@ async function toPng(image:string, imageOut:string, aScale?: number) {
     return result;
 }
 
-async function splitImage(image:string, bounds:any, newImage: string) {
-    const metadata = await sharp(image, {limitInputPixels}).extract(bounds).toFile(newImage);
-    console.log(metadata);
+async function cropImage(image:string, bounds:any, newImage: string) {
+    const info = await sharp(image, {limitInputPixels}).extract(bounds).toFile(newImage);
+    return info;
 }
 
 
-async function splitSharpImage(image:sharp.Sharp, bounds:any, newImage: string) {
-    const metadata = await image.extract(bounds).toFile(newImage);
-    console.log(metadata);
+async function cropSharpImage(image:sharp.Sharp, bounds:any, newImage: string) {
+    const info = await image.extract(bounds).toFile(newImage);
+    return info;
 }
 
 export {
     getMetadata,
     toPng,
-    splitImage,
-    splitSharpImage
+    cropImage,
+    cropSharpImage
 }

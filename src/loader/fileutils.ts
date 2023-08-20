@@ -11,3 +11,10 @@ export function saveTextFile(content: string, filename: string ) {
     fs.writeFileSync(filename, content);
 }
 
+export function validExtension(filename, allowedFiles: string[]) {
+    var regex = new RegExp("([a-zA-Z0-9\s_\\.\-:])+(" + allowedFiles.join('|') + ")$");
+    if (!regex.test(filename.toLowerCase())) {
+        return false;
+    }
+    return true;
+}

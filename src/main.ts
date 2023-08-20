@@ -39,6 +39,8 @@ program.command('generate')
     .option('-e, --export [feturecollection]', 'Export vertices to a FeatureCollection file, default name: FeatureCollection.geojson', null)
     .action((csvfile, imagefile, options) => {
         getMetadata(imagefile).then(metadata=> {
+            console.log("Image info:");
+            console.log(renderJSONAsText(metadata));
             const fullOptions:GenerateObjOptions = {
                 csvFile: csvfile,
                 imagefile: imagefile,

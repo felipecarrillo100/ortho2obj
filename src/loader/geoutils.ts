@@ -45,3 +45,10 @@ export function shiftPolygonFeatureBackInMeters(feature: any, width: number) {
         return translatedPoly;
     }
 }
+
+export function splitFeatureCollectionInHorizontalPieces(featureCollection: any, pieces: number) {
+  const newFeatureCollection = JSON.parse(JSON.stringify(featureCollection));
+  const features = newFeatureCollection.features;
+  if (features.length !== 1 ) return null;
+  return  newFeatureCollection;
+}

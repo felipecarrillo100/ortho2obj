@@ -39,8 +39,8 @@ export function loadLocationFromCSVFile(filename: string) {
                 const right_bottom = data.find(e=>e.name==="right_bottom");
                 const right_top = data.find(e=>e.name==="right_top");
 
-                if (typeof left_top !== "undefined" && typeof left_bottom !== "undefined" &&
-                    typeof right_bottom !== "undefined" && typeof right_top !== "undefined" ) {
+                if (isCorrectFormat(left_top) && isCorrectFormat(left_bottom) &&
+                    isCorrectFormat( right_bottom) && isCorrectFormat(right_top) ) {
                     const sortedBounds = [left_top, left_bottom, right_bottom, right_top, left_top];
                     resolve(sortedBounds);
                 } else {
@@ -48,4 +48,24 @@ export function loadLocationFromCSVFile(filename: string) {
                 }
             });
     })
+}
+
+function isCorrectFormat(row) {
+    const isDefined = (value: any) => typeof value!=="undefined";
+
+    if (typeof row === "undefined") return false;
+
+    const allValuesDefined =
+        isDefined(row.ecef_x) &&
+        isDefined(row.ecef_y) &&
+        isDefined(row.ecef_z) &&
+        isDefined(row.wgs84_lat) &&
+        isDefined(row.wgs84_lon) &&
+        isDefined(row.wgs84_elev) &&
+        isDefined(row.utm25832_lat) &&
+        isDefined(row.utm25832_lon) &&
+        isDefined(row.utm25832_elev) &&
+        isDefined(row.name);
+
+    return allValuesDefined;
 }

@@ -1,15 +1,23 @@
 import sharp from "sharp";
 import {loadLocationFromCSVFile} from "./csvloader";
-import {createFolder, saveTextFile} from "./fileutils";
-import {saveJSON} from "./jsonutils";
-import {reprojectPolygonFeature, shiftPolygonFeatureBackInMeters} from "./geoutils";
+import {createFolder, saveTextFile, validExtension} from "./fileutils";
+import {renderJSONAsText, saveJSON} from "./jsonutils";
+import {
+    reprojectPolygonFeature,
+    shiftPolygonFeatureBackInMeters,
+    splitFeatureCollectionInHorizontalPieces
+} from "./geoutils";
 import {createMtlObJContent, createObJContent, getVertices, Wall} from "./generatevertices";
 import {downloadEPSGToPrj} from "./ogcwktutils";
-import {splitSharpImage} from "./imageprocessing";
+import {cropSharpImage} from "./imageprocessing";
 
 const wallWidth = 0.5;
 const textureBaseName =  "texture";
 const limitInputPixels  = 200000 * 10000;
+const VALID_EXTENSION = [".png", ".jpg", ".jpeg", ".tif"];
+
+const MINWIDTH = 1000;
+const MAXWIDTH = 1000000;
 
 export interface GenerateObjOptions {
     csvFile: string;
@@ -35,18 +43,25 @@ export class ObjGenerator {
         this.options = options;
         this.texture = `${textureBaseName}.${this.options.format}`;
         this.metadata = metadata;
-        console.log(this.options);
+        console.log("Input options:")
+        console.log(renderJSONAsText(this.options));
     }
 
     public generateObj() {
         const folderExists = createFolder(this.options.output);
         if (folderExists) {
             this.produceFeatureCollection(this.options.csvFile).then(collection=>{
+                if (!collection) {
+                    console.log("Failed to create the geometry, review your inputs and try again.");
+                    return;
+                }
                 if (this.options.export) {
                     const exportName =  typeof this.options.export === "string" ? this.options.export : "FeatureCollection.geojson"
                     saveJSON(collection, `${this.options.output}/${exportName}`);
                 }
                 this.generateObjFile(collection);
+            }, ()=> {
+                console.log(`Failed to parse .csv file: ${this.options.csvFile}`);
             });
         } else {
             console.log("Failed to create output directory: " + this.options.output)
@@ -78,8 +93,8 @@ export class ObjGenerator {
                 }
                 const result = this.splitFeatureCollectionWhenNeeded(featureCollection)
                 resolve(result);
-            }, ()=> {
-                reject();
+            }, (err)=> {
+                reject(err);
             })
         })
     }
@@ -127,11 +142,16 @@ export class ObjGenerator {
         console.log(`Downloading projection ${this.options.projection} to: ${prjFilename}`)
         downloadEPSGToPrj(this.options.projection, `${this.options.output}/${prjFilename}`)
 
+        //  Commented to save time during debug
         this.createAllTextures();
     }
 
-    private async createAllTextures() {
+    private getEstimatedWidth() {
         const estimatedWidth = Math.ceil(this.metadata.width * this.options.scale);
+        return estimatedWidth;
+    }
+    private async createAllTextures() {
+        const estimatedWidth = this.getEstimatedWidth();
         console.log("Generating textures:");
 
         if (this.walls.length===1) {
@@ -157,14 +177,23 @@ export class ObjGenerator {
                     width: tileWidth,
                     height: metadata.height
                 }
-                await splitSharpImage(newSharpImage, values, `${this.options.output}/${filename}`);
+                await cropSharpImage(newSharpImage, values, `${this.options.output}/${filename}`);
             }
         }
         console.log("All textures completed");
     }
 
     private splitFeatureCollectionWhenNeeded(featureCollection: { features: any[]; type: string }) {
-        return featureCollection;
+        const estimatedWidth = this.getEstimatedWidth();
+        console.log("Estimated tile Width: " + estimatedWidth);
+
+        if (estimatedWidth<this.options.maxwidth) {
+            return featureCollection;
+        }
+
+        const pieces = Math.ceil(estimatedWidth / this.options.maxwidth);
+        const newFeatureCollection = splitFeatureCollectionInHorizontalPieces(featureCollection, pieces);
+        return newFeatureCollection;
     }
 
     validOptions() {
@@ -175,6 +204,15 @@ export class ObjGenerator {
         }
         if (!(this.options.projection.toLowerCase().startsWith("epsg:") || this.options.projection.toLowerCase()==="crs:84")) {
             console.log("Option projection must use EPSG:<code>, got: " + this.options.projection);
+            return false;
+        }
+
+        if (  !(MINWIDTH <= this.options.maxwidth && this.options.maxwidth < MAXWIDTH)) {
+            console.log(`Invalid tile width maxwidth, expected ${MINWIDTH} <= maxwidth <= ${MAXWIDTH}, got:  ${this.options.maxwidth}`);
+            return false;
+        }
+        if (!validExtension(this.options.imagefile, VALID_EXTENSION)) {
+            console.log(`Invalid image format, supportedL tif, png, jpg, jpeg, got:  ${this.options.imagefile}`);
             return false;
         }
         return valid;
