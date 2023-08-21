@@ -165,18 +165,19 @@ export class ObjGenerator {
         } else {
             const pieces = this.walls.length;
             const maxWidth = this.options.maxwidth;
-            const newSharpImage = this.options.scale === 1 ?
-                await sharp(this.options.imagefile, {limitInputPixels}) :
-                await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth});
-
+            let newSharpImage =  null;
             const imageInfo = {
                 width: this.metadata.width,
                 height: this.metadata.height
             }
             if (this.options.scale!==1) {
-                const { info } = await newSharpImage.png().toBuffer({ resolveWithObject: true });
+                console.log("Performing in memory image resize. This may take a while...");
+                const { data, info } = await sharp(this.options.imagefile, {limitInputPixels}).resize({width: estimatedWidth}).png().toBuffer({ resolveWithObject: true });
                 imageInfo.width = info.width;
                 imageInfo.height = info.height;
+                newSharpImage = sharp(data,{limitInputPixels});
+            } else {
+                newSharpImage =  await sharp(this.options.imagefile, {limitInputPixels});
             }
 
             for (let i=0; i<pieces; ++i) {
