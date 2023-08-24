@@ -49,7 +49,7 @@ program.command('generate')
                 output: options.output,
                 export: options.export,
                 projection: options.projection,
-                format: options.format
+                format: options.format.toLowerCase()
             }
             const objGenerator = new ObjGenerator(fullOptions, metadata);
             if (!objGenerator.validOptions()) return;
