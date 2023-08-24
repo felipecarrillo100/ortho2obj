@@ -224,7 +224,7 @@ export class ObjGenerator {
             return false;
         }
 
-        if (  !(MINWIDTH <= this.options.maxwidth && this.options.maxwidth < MAXWIDTH)) {
+        if (  !(MINWIDTH <= this.options.maxwidth && this.options.maxwidth <= MAXWIDTH)) {
             console.log(`Invalid tile width maxwidth, expected ${MINWIDTH} <= maxwidth <= ${MAXWIDTH}, got:  ${this.options.maxwidth}`);
             return false;
         }
