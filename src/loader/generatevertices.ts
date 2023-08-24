@@ -100,7 +100,7 @@ function createTexturedFaces(walls: Wall[]) {
         const textureName = `${orthoTexture}.${i}`;
         content += `usemtl ${textureName} \n`;
         const [v1,v2,v3,v4] = getWallVertices(i);
-        content += `f ${v1}/1 ${v2}/2 ${v3}/3 ${v4}/4\n`;
+        content += `f ${v1}/1 ${v2}/2 ${v3}/3 ${v4}/4\n`;   // Front wall with texture
     }
     return content;
 }
