@@ -1,7 +1,6 @@
 import transformation from "transform-coordinates";
 import turf from "turf";
 import transformTranslate from "@turf/transform-translate";
-import {saveJSON} from "./jsonutils";
 
 export function reprojectPolygonFeature(polygonFeature, targetEPSG) {
     const newFeature = JSON.parse(JSON.stringify(polygonFeature));

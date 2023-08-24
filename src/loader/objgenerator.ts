@@ -11,7 +11,7 @@ import {createMtlObJContent, createObJContent, getVertices, Wall} from "./genera
 import {downloadEPSGToPrj} from "./ogcwktutils";
 import {cropSharpImage} from "./imageprocessing";
 
-const wallWidth = 0.5;
+const wallWidth = 1;
 const textureBaseName =  "texture";
 const limitInputPixels  = 200000 * 10000;
 const VALID_EXTENSION = [".png", ".jpg", ".jpeg", ".tif"];
