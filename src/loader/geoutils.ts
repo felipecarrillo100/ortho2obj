@@ -47,15 +47,39 @@ export function shiftPolygonFeatureBackInMeters(feature: any, width: number) {
     }
 }
 
+function interpolateHeight(bottom, top, ratio) {
+    return (top - bottom) * ratio + bottom;
+}
+
+function along(line: any, distance: number, totalDistance) {
+    const point = turf.along(line, distance, "meters");
+    if (line.geometry.coordinates.length ===2 && line.geometry.coordinates[0].length === 3 || line.geometry.coordinates[1].length ===3) {
+       const height =  interpolateHeight(line.geometry.coordinates[0][2], line.geometry.coordinates[1][2], distance / totalDistance);
+       if (point.geometry.coordinates.length === 2) {
+           point.geometry.coordinates.push(height);
+       } else {
+           point.geometry.coordinates[2] = height;
+       }
+       return point;
+    } else {
+        return point;
+    }
+}
+
+function lineString(a:number[], b: number[]) {
+    const line = turf.lineString([a, b]);
+    return line;
+}
 export function splitFeatureCollectionInHorizontalPieces(featureCollection: any, pieces: number, ratio: number) {
-  const newFeatureCollection = JSON.parse(JSON.stringify(featureCollection));
-  const features = newFeatureCollection.features;
-  newFeatureCollection.features = [];
+    const newFeatureCollection = JSON.parse(JSON.stringify(featureCollection));
+    const features = newFeatureCollection.features;
+    newFeatureCollection.features = [];
 
-  if (features.length !== 1 ) return null;
+    if (features.length !== 1 ) return null;
+    if (pieces === 1 ) return newFeatureCollection;
 
-  const feature =  features[0];
-  const coordinates = feature.geometry.coordinates;
+    const feature =  features[0];
+    const coordinates = feature.geometry.coordinates;
 
     const topLeft = coordinates[0][0];
     const topRight = coordinates[0][3];
@@ -63,41 +87,34 @@ export function splitFeatureCollectionInHorizontalPieces(featureCollection: any,
     const bottomLeft = coordinates[0][1];
     const bottomRight = coordinates[0][2];
 
+    const lineBottom = lineString(bottomLeft, bottomRight);
+    const lineTop = lineString(topLeft, topRight);
+
+    console.log(lineTop);
+
+
     const from = turf.point(bottomLeft);
     const to = turf.point(bottomRight);
 
-    const distance = turf.distance(from, to, "meters");
-    const bearing = turf.bearing(from, to);
+    const totalDistance = turf.distance(from, to, "meters");
 
-    console.log(`distance ${distance}`);
-    console.log(`bearing ${bearing}`);
+    console.log(`distance ${totalDistance}`);
 
-    const pointTop = turf.point(topLeft);
-    const pointBottom = turf.point(bottomLeft);
-
-    const newTopRight = turf.destination(pointTop, distance*ratio, bearing, "meters");
-    const newBottomRight = turf.destination(pointBottom, distance*ratio, bearing, "meters");
-
-
-    console.log(`newTopRight ${JSON.stringify(newTopRight)}`);
-    console.log(`newBottomRight ${JSON.stringify(newBottomRight)}`);
-
-
-    feature.geometry.coordinates[0][3] = [...newTopRight.geometry.coordinates, topRight[2]];
-    feature.geometry.coordinates[0][2] = [...newBottomRight.geometry.coordinates, bottomRight[2]];
-
+    const D = totalDistance * ratio;
+    console.log(`Tile distance ${D}`);
 
     for (let i=0; i<pieces; ++i) {
-        const shiftedFeature = transformTranslate(feature, distance*ratio*i,bearing, {units: "meters"} );
+        const leftPointTop = along(lineTop, D*i, totalDistance);
+        const rightPointTop = along(lineTop, (D*(i+1)), totalDistance);
+        const leftPointBottom = along(lineBottom, D*i, totalDistance);
+        const rightPointBottom = along(lineBottom, (D*(i+1)), totalDistance);
+
+        const shiftedFeature = JSON.parse(JSON.stringify(feature));
+        const newCoordinates =  [leftPointTop.geometry.coordinates, leftPointBottom.geometry.coordinates, rightPointBottom.geometry.coordinates, rightPointTop.geometry.coordinates, leftPointTop.geometry.coordinates];
+        shiftedFeature.geometry.coordinates[0] = newCoordinates;
+
         newFeatureCollection.features.push(shiftedFeature);
     }
 
-    const lastFeature = newFeatureCollection.features[newFeatureCollection.features.length-1];
-
-    lastFeature.geometry.coordinates[0][3] = topRight;
-    lastFeature.geometry.coordinates[0][2] = bottomRight
-
-    console.log("New Feature clipped: ", JSON.stringify(newFeatureCollection));
-
-  return  newFeatureCollection;
+    return  newFeatureCollection;
 }
