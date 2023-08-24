@@ -112,11 +112,11 @@ function createNonTexturedFaces(walls: Wall[]) {
         const [v1,v2,v3,v4, v5, v6,v7,v8] = getWallVertices(i);
 
         content +=
-        `f ${v5}/1 ${v6}/2 ${v7}/3 ${v8}/4\n`+
-        `f ${v3}/1 ${v4}/2 ${v5}/3 ${v6}/4\n`+
-        `f ${v1}/1 ${v4}/2 ${v5}/3 ${v8}/4\n`+
-        `f ${v1}/1 ${v2}/2 ${v7}/3 ${v8}/4\n`+
-        `f ${v2}/1 ${v3}/2 ${v6}/3 ${v7}/4\n`;
+        `f ${v5}/1 ${v6}/2 ${v7}/3 ${v8}/4\n`+  // Back wall
+        `f ${v3}/1 ${v4}/2 ${v5}/3 ${v6}/4\n`+  // Side wall right
+        `f ${v1}/1 ${v4}/2 ${v5}/3 ${v8}/4\n`+  // Side wall top
+        `f ${v1}/1 ${v2}/2 ${v7}/3 ${v8}/4\n`+  // Side wall left
+        `f ${v2}/1 ${v3}/2 ${v6}/3 ${v7}/4\n`;  // Side wall bottom
     }
     return content;
 }
