@@ -15,7 +15,7 @@ const wallWidth = 1;
 const textureBaseName =  "texture";
 const limitInputPixels  = 200000 * 10000;
 const VALID_EXTENSION = [".png", ".jpg", ".jpeg", ".tif"];
-
+const VALID_IMAGE_FORMATS = [".png", ".jpg"];
 const MINWIDTH = 1000;
 const MAXWIDTH = 1000000;
 
@@ -221,6 +221,11 @@ export class ObjGenerator {
         }
         if (!(this.options.projection.toLowerCase().startsWith("epsg:") || this.options.projection.toLowerCase()==="crs:84")) {
             console.log("Option projection must use EPSG:<code>, got: " + this.options.projection);
+            return false;
+        }
+
+        if (!(validExtension(`name.${this.options.format}`, VALID_IMAGE_FORMATS))) {
+            console.log(`Invalid requested format, supported png, jpg got:  ${this.options.format}`);
             return false;
         }
 
