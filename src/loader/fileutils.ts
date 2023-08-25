@@ -18,3 +18,8 @@ export function validExtension(filename, allowedFiles: string[]) {
     }
     return true;
 }
+
+export function getFileExtension(filename: string) {
+    return filename.split('.').pop();
+
+}

@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import {getFileExtension} from "./fileutils";
 
 const limitInputPixels  = 200000 * 10000;
 
@@ -23,8 +24,15 @@ async function cropImage(image:string, bounds:any, newImage: string) {
 
 
 async function cropSharpImage(image:sharp.Sharp, bounds:any, newImage: string) {
-    const info = await image.extract(bounds).toFile(newImage);
-    return info;
+    const fileExtension = getFileExtension(newImage);
+    if (fileExtension==="jpg") {
+        const info = await image.extract(bounds).jpeg({quality: 90}).toFile(newImage);
+        return info;
+    } else {
+        const info = await image.extract(bounds).toFile(newImage);
+        return info;
+    }
+
 }
 
 export {
