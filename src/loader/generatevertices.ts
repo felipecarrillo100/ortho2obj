@@ -31,10 +31,10 @@ function createObJHeader(mtlfile: string, shapeName: string) {
 
 function getVTs() {
     const vts = [
-        [0.000000, 1.000000],
-        [ 0.000000, 0.000000],
-        [ 1.000000, 0.000000],
-        [1.000000, 1.000000],
+        [0.000000, 1.000000, 0],
+        [ 0.000000, 0.000000, 0],
+        [ 1.000000, 0.000000, 0],
+        [1.000000, 1.000000, 0],
         ]
     return vts;
 }
@@ -79,7 +79,7 @@ function createVts(walls: Wall[]) {
     const vts = getVTs();
     for (const vt  of vts) {
         const [x,y,z] = vt;
-        content += `vt ${x} ${y} \n`
+        content += `vt ${x} ${y} ${z}\n`
     }
     return content;
 }
@@ -100,7 +100,8 @@ function createTexturedFaces(walls: Wall[]) {
         const textureName = `${orthoTexture}.${i}`;
         content += `usemtl ${textureName} \n`;
         const [v1,v2,v3,v4] = getWallVertices(i);
-        content += `f ${v1}/1 ${v2}/2 ${v3}/3 ${v4}/4\n`;   // Front wall with texture
+        content += `f ${v1}/1 ${v2}/2 ${v3}/3 \n`;   // Front wall with texture
+        content += `f ${v3}/3 ${v4}/4 ${v1}/1 \n`;   // Front wall with texture
     }
     return content;
 }
@@ -112,11 +113,11 @@ function createNonTexturedFaces(walls: Wall[]) {
         const [v1,v2,v3,v4, v5, v6,v7,v8] = getWallVertices(i);
 
         content +=
-        `f ${v5}/1 ${v6}/2 ${v7}/3 ${v8}/4\n`+  // Back wall
-        (i===walls.length-1 ?`f ${v3}/1 ${v4}/2 ${v5}/3 ${v6}/4\n` : "")+  // Side wall right
-        `f ${v1}/1 ${v4}/2 ${v5}/3 ${v8}/4\n`+  // Side wall top
-        (i===0 ? `f ${v1}/1 ${v2}/2 ${v7}/3 ${v8}/4\n` : "")+  // Side wall left
-        `f ${v2}/1 ${v3}/2 ${v6}/3 ${v7}/4\n`;  // Side wall bottom
+        `f ${v5}/1 ${v6}/2 ${v7}/3 \nf ${v7}/3 ${v8}/4 ${v5}/1 \n`+  // Back wall
+        (i===walls.length-1 ?`f ${v3}/1 ${v4}/2 ${v5}/3\nf ${v5}/3 ${v6}/4 ${v3}/1\n` : "")+  // Side wall right
+        `f ${v1}/1 ${v4}/2 ${v5}/3 \nf ${v5}/3 ${v8}/4 ${v1}/1\n`+  // Side wall top
+        (i===0 ? `f ${v1}/1 ${v2}/2 ${v7}/3 \nf ${v7}/3 ${v8}/4 ${v1}/1\n` : "")+  // Side wall left
+        `f ${v2}/1 ${v3}/2 ${v6}/3\nf ${v6}/3 ${v7}/4 ${v2}/1\n`;  // Side wall bottom
     }
     return content;
 }
@@ -124,6 +125,7 @@ function createNonTexturedFaces(walls: Wall[]) {
 export function createObJContent(walls: Wall[], mltFile: string) {
     let content = createObJHeader(mltFile, shapeName);
     content += createVertices(walls);
+    // Describe texture to vertices
     content += createVts(walls);
     content += createTexturedFaces(walls);
     content += createNonTexturedFaces(walls);
